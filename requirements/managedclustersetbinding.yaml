@@ -1,0 +1,8 @@
+---
+apiVersion: cluster.open-cluster-management.io/v1beta2
+kind: ManagedClusterSetBinding
+metadata:
+  name: secure-clusterset
+  namespace: multinetpolicy-configs
+spec:
+  clusterSet: secure-clusterset

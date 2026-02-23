@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-blue-egress-allow-dns
+  namespace: multinetpolicy-configs
+  labels:
+    multinetpolicy-nad: tenant-blue
+    multinetpolicy-type: egress
+data:
+  rules: |
+    [
+      {
+        "protocol": "UDP",
+        "port": "53",
+        "cidr": "0.0.0.0/0"
+      },
+      {
+        "protocol": "TCP",
+        "port": "53",
+        "cidr": "0.0.0.0/0"
+      }
+    ]

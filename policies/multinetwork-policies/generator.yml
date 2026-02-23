@@ -1,0 +1,38 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PolicyGenerator
+metadata:
+  name: gen-policy-generator-mnp
+policyDefaults:
+  namespace: multinetwork-policies
+  remediationAction: enforce
+  consolidateManifests: false
+  pruneObjectBehavior: DeleteIfCreated
+  categories:
+    - "CM Configuration Management"
+  controls:
+    - "CM-2 Baseline Configuration"
+  standards:
+    - "NIST SP 800-53"
+  policyLabels:
+    policy_gen.name: multinetwork-policies
+  severity: medium
+  policySets:
+    - multinetwork-policies
+
+placementBindingDefaults:
+  name: "mnp-binding"
+
+policies:
+  - name: multinetworkpolicy-from-configmap
+    description: "Creates MultiNetworkPolicies dynamically from hub ConfigMaps for namespaces containing matching NADs"
+    hubTemplateOptions:
+      serviceAccountName: mnp-hub-serviceaccount
+    manifests:
+      - path: multinetworkpolicy-from-configmap.yml
+        name: mnp-from-configmap
+
+policySets:
+  - name: multinetwork-policies
+    placement:
+      placementName: "env-bound-nohub-placement"

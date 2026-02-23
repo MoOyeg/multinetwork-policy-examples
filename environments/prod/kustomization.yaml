@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: multinetwork-policies-prod
+
+transformers:
+  - kustomize-configs/policyset-suffixer.yml
+
+resources:
+  - managedclusterset.yml
+  - ../../local-cluster/
+  - ../../policies/
+
+components:
+  - ../../kustomize-configs/

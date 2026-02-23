@@ -1,0 +1,10 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - tenant-blue-ingress-allow-web.yml
+  - tenant-blue-ingress-allow-api.yml
+  - tenant-blue-egress-allow-dns.yml
+  - tenant-red-ingress-deny-all.yml
+  - tenant-red-egress-deny-all.yml
+  - tenant-blue-ns-web-ingress-allow-https.yml

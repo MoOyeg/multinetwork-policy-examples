@@ -1,0 +1,13 @@
+---
+apiVersion: builtin
+kind: PrefixSuffixTransformer
+metadata:
+  name: policyset-suffixer
+suffix: -dev
+fieldSpecs:
+  - kind: PolicySet
+    path: metadata/name
+  - kind: ClusterRole
+    path: metadata/name
+  - kind: ClusterRoleBinding
+    path: metadata/name

@@ -1,0 +1,177 @@
+---
+object-templates-raw: |
+  {{hub- $allCMs := (lookup "v1" "ConfigMap" "multinetpolicy-configs" "" "multinetpolicy-nad").items hub}}
+  {{hub- $nadConfigs := dict hub}}
+
+  {{hub- range $cm := $allCMs hub}}
+    {{hub- if not (hasKey $cm.metadata.labels "multinetpolicy-namespace") hub}}
+    {{hub- $nadName := (index $cm.metadata.labels "multinetpolicy-nad") hub}}
+    {{hub- $ruleType := (index $cm.metadata.labels "multinetpolicy-type") hub}}
+
+    {{hub- if not (hasKey $nadConfigs $nadName) hub}}
+      {{hub- $_ := set $nadConfigs $nadName (dict "ingressRules" list "egressRules" list "hasIngressCM" false "hasEgressCM" false) hub}}
+    {{hub- end hub}}
+    {{hub- $nadConf := (index $nadConfigs $nadName) hub}}
+
+    {{hub- $parsedRules := (fromJson (index $cm.data "rules")) hub}}
+    {{hub- if eq $ruleType "ingress" hub}}
+      {{hub- $_ := set $nadConf "hasIngressCM" true hub}}
+      {{hub- range $rule := $parsedRules hub}}
+        {{hub- $_ := set $nadConf "ingressRules" (append (index $nadConf "ingressRules") $rule) hub}}
+      {{hub- end hub}}
+    {{hub- else if eq $ruleType "egress" hub}}
+      {{hub- $_ := set $nadConf "hasEgressCM" true hub}}
+      {{hub- range $rule := $parsedRules hub}}
+        {{hub- $_ := set $nadConf "egressRules" (append (index $nadConf "egressRules") $rule) hub}}
+      {{hub- end hub}}
+    {{hub- end hub}}
+    {{hub- end hub}}
+  {{hub- end hub}}
+
+  {{- range $nad := (lookup "k8s.cni.cncf.io/v1" "NetworkAttachmentDefinition" "" "").items }}
+  {{hub- range $nadName, $conf := $nadConfigs hub}}
+    {{hub- $ingressRules := (index $conf "ingressRules") hub}}
+    {{hub- $egressRules := (index $conf "egressRules") hub}}
+    {{hub- $hasIngressCM := (index $conf "hasIngressCM") hub}}
+    {{hub- $hasEgressCM := (index $conf "hasEgressCM") hub}}
+    {{hub- $hasIngressRules := (gt (len $ingressRules) 0) hub}}
+    {{hub- $hasEgressRules := (gt (len $egressRules) 0) hub}}
+    {{- if eq $nad.metadata.name "{{hub $nadName hub}}" }}
+  - complianceType: mustonlyhave
+    objectDefinition:
+      apiVersion: k8s.cni.cncf.io/v1beta1
+      kind: MultiNetworkPolicy
+      metadata:
+        name: acm-mnp-{{hub $nadName hub}}
+        namespace: '{{ $nad.metadata.namespace }}'
+        annotations:
+          k8s.v1.cni.cncf.io/policy-for: '{{ $nad.metadata.namespace }}/{{hub $nadName hub}}'
+        labels:
+          managed-by: acm-multinetpolicy
+      spec:
+        podSelector: {}
+        policyTypes:
+    {{hub- if $hasIngressCM hub}}
+          - Ingress
+    {{hub- end hub}}
+    {{hub- if $hasEgressCM hub}}
+          - Egress
+    {{hub- end hub}}
+    {{hub- if $hasIngressRules hub}}
+        ingress:
+      {{hub- range $rule := $ingressRules hub}}
+          -
+        {{hub- if (hasKey $rule "cidr") hub}}
+            from:
+              - ipBlock:
+                  cidr: '{{hub index $rule "cidr" hub}}'
+          {{hub- if (hasKey $rule "except") hub}}
+                  except:
+            {{hub- range $e := (index $rule "except") hub}}
+                    - '{{hub $e hub}}'
+            {{hub- end hub}}
+          {{hub- end hub}}
+        {{hub- end hub}}
+            ports:
+              - port: {{hub index $rule "port" hub}}
+                protocol: {{hub index $rule "protocol" hub}}
+      {{hub- end hub}}
+    {{hub- end hub}}
+    {{hub- if $hasEgressRules hub}}
+        egress:
+      {{hub- range $rule := $egressRules hub}}
+          -
+        {{hub- if (hasKey $rule "cidr") hub}}
+            to:
+              - ipBlock:
+                  cidr: '{{hub index $rule "cidr" hub}}'
+          {{hub- if (hasKey $rule "except") hub}}
+                  except:
+            {{hub- range $e := (index $rule "except") hub}}
+                    - '{{hub $e hub}}'
+            {{hub- end hub}}
+          {{hub- end hub}}
+        {{hub- end hub}}
+            ports:
+              - port: {{hub index $rule "port" hub}}
+                protocol: {{hub index $rule "protocol" hub}}
+      {{hub- end hub}}
+    {{hub- end hub}}
+    {{- end }}
+  {{hub- end hub}}
+  {{- end }}
+
+  {{- range $nad := (lookup "k8s.cni.cncf.io/v1" "NetworkAttachmentDefinition" "" "").items }}
+  {{hub- range $cm := $allCMs hub}}
+    {{hub- if (hasKey $cm.metadata.labels "multinetpolicy-namespace") hub}}
+    {{hub- $nadName := (index $cm.metadata.labels "multinetpolicy-nad") hub}}
+    {{hub- $ruleType := (index $cm.metadata.labels "multinetpolicy-type") hub}}
+    {{hub- $targetNs := (index $cm.metadata.labels "multinetpolicy-namespace") hub}}
+    {{hub- $cmName := $cm.metadata.name hub}}
+    {{hub- $parsedRules := (fromJson (index $cm.data "rules")) hub}}
+    {{hub- $hasRules := (gt (len $parsedRules) 0) hub}}
+    {{- if and (eq $nad.metadata.name "{{hub $nadName hub}}") (eq $nad.metadata.namespace "{{hub $targetNs hub}}") }}
+  - complianceType: mustonlyhave
+    objectDefinition:
+      apiVersion: k8s.cni.cncf.io/v1beta1
+      kind: MultiNetworkPolicy
+      metadata:
+        name: acm-mnp-ns-{{hub $cmName hub}}
+        namespace: '{{ $nad.metadata.namespace }}'
+        annotations:
+          k8s.v1.cni.cncf.io/policy-for: '{{ $nad.metadata.namespace }}/{{hub $nadName hub}}'
+        labels:
+          managed-by: acm-multinetpolicy
+      spec:
+        podSelector: {}
+        policyTypes:
+    {{hub- if eq $ruleType "ingress" hub}}
+          - Ingress
+    {{hub- end hub}}
+    {{hub- if eq $ruleType "egress" hub}}
+          - Egress
+    {{hub- end hub}}
+    {{hub- if and (eq $ruleType "ingress") $hasRules hub}}
+        ingress:
+      {{hub- range $rule := $parsedRules hub}}
+          -
+        {{hub- if (hasKey $rule "cidr") hub}}
+            from:
+              - ipBlock:
+                  cidr: '{{hub index $rule "cidr" hub}}'
+          {{hub- if (hasKey $rule "except") hub}}
+                  except:
+            {{hub- range $e := (index $rule "except") hub}}
+                    - '{{hub $e hub}}'
+            {{hub- end hub}}
+          {{hub- end hub}}
+        {{hub- end hub}}
+            ports:
+              - port: {{hub index $rule "port" hub}}
+                protocol: {{hub index $rule "protocol" hub}}
+      {{hub- end hub}}
+    {{hub- end hub}}
+    {{hub- if and (eq $ruleType "egress") $hasRules hub}}
+        egress:
+      {{hub- range $rule := $parsedRules hub}}
+          -
+        {{hub- if (hasKey $rule "cidr") hub}}
+            to:
+              - ipBlock:
+                  cidr: '{{hub index $rule "cidr" hub}}'
+          {{hub- if (hasKey $rule "except") hub}}
+                  except:
+            {{hub- range $e := (index $rule "except") hub}}
+                    - '{{hub $e hub}}'
+            {{hub- end hub}}
+          {{hub- end hub}}
+        {{hub- end hub}}
+            ports:
+              - port: {{hub index $rule "port" hub}}
+                protocol: {{hub index $rule "protocol" hub}}
+      {{hub- end hub}}
+    {{hub- end hub}}
+    {{- end }}
+    {{hub- end hub}}
+  {{hub- end hub}}
+  {{- end }}

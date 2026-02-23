@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-red-ingress-deny-all
+  namespace: multinetpolicy-configs
+  labels:
+    multinetpolicy-nad: tenant-red
+    multinetpolicy-type: ingress
+data:
+  rules: "[]"
