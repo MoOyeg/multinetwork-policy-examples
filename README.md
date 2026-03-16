@@ -1,4 +1,4 @@
-# nfs-policy-examples
+# multinetwork-policy-examples
 
 ACM (Red Hat Advanced Cluster Management) policy examples for managing NetworkPolicies and MultiNetworkPolicies across OpenShift clusters.
 
