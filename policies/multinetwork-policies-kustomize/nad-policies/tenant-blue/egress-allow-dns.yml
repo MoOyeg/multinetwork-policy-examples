@@ -1,0 +1,34 @@
+---
+object-templates-raw: |
+  {{- range $nad := (lookup "k8s.cni.cncf.io/v1" "NetworkAttachmentDefinition" "" "").items }}
+  {{- if eq $nad.metadata.name "tenant-blue" }}
+  - complianceType: musthave
+    objectDefinition:
+      apiVersion: k8s.cni.cncf.io/v1beta1
+      kind: MultiNetworkPolicy
+      metadata:
+        name: acm-mnp-tenant-blue
+        namespace: '{{ $nad.metadata.namespace }}'
+        annotations:
+          k8s.v1.cni.cncf.io/policy-for: '{{ $nad.metadata.namespace }}/tenant-blue'
+        labels:
+          managed-by: acm-multinetpolicy
+      spec:
+        podSelector: {}
+        policyTypes:
+          - Egress
+        egress:
+          - to:
+              - ipBlock:
+                  cidr: '0.0.0.0/0'
+            ports:
+              - port: 53
+                protocol: UDP
+          - to:
+              - ipBlock:
+                  cidr: '0.0.0.0/0'
+            ports:
+              - port: 53
+                protocol: TCP
+  {{- end }}
+  {{- end }}

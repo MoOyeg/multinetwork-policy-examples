@@ -1,0 +1,52 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PolicyGenerator
+metadata:
+  name: gen-policy-generator-mnp-kustomize
+policyDefaults:
+  namespace: multinetwork-policies
+  remediationAction: enforce
+  consolidateManifests: false
+  pruneObjectBehavior: DeleteIfCreated
+  categories:
+    - "CM Configuration Management"
+  controls:
+    - "CM-2 Baseline Configuration"
+  standards:
+    - "NIST SP 800-53"
+  policyLabels:
+    policy_gen.name: multinetwork-policies-kustomize
+  severity: medium
+  policySets:
+    - multinetwork-policies-kustomize
+
+placementBindingDefaults:
+  name: "mnp-kustomize-binding"
+
+policies:
+  - name: mnp-kustomize-tenant-blue
+    description: "MultiNetworkPolicy rules for tenant-blue NAD (merged from multiple rule files)"
+    manifests:
+      - path: nad-policies/tenant-blue/ingress-allow-web.yml
+        name: mnp-kustomize-tenant-blue-ingress-web
+      - path: nad-policies/tenant-blue/ingress-allow-api.yml
+        name: mnp-kustomize-tenant-blue-ingress-api
+      - path: nad-policies/tenant-blue/egress-allow-dns.yml
+        name: mnp-kustomize-tenant-blue-egress-dns
+  - name: mnp-kustomize-tenant-red
+    description: "MultiNetworkPolicy deny-all rules for tenant-red NAD"
+    manifests:
+      - path: nad-policies/tenant-red/ingress-deny-all.yml
+        name: mnp-kustomize-tenant-red-ingress-deny
+      - path: nad-policies/tenant-red/egress-deny-all.yml
+        name: mnp-kustomize-tenant-red-egress-deny
+  - name: mnp-kust-blue-ns-web-frontend
+    description: "Namespace-scoped MultiNetworkPolicy for tenant-blue in web-frontend"
+    manifests:
+      - path: nad-ns-policies/tenant-blue-web-frontend.yml
+        name: mnp-kust-blue-ns-web
+
+policySets:
+  - name: multinetwork-policies-kustomize
+    placement:
+      placementName: "env-bound-nohub-placement"

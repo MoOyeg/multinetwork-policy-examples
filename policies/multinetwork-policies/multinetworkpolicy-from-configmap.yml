@@ -73,8 +73,8 @@ object-templates-raw: |
           {{hub- end hub}}
         {{hub- end hub}}
             ports:
-              - port: {{hub index $rule "port" hub}}
-                protocol: {{hub index $rule "protocol" hub}}
+              - port: '{{hub index $rule "port" hub}}'
+                protocol: '{{hub index $rule "protocol" hub}}'
       {{hub- end hub}}
     {{hub- end hub}}
     {{hub- if $hasEgressRules hub}}
@@ -93,8 +93,8 @@ object-templates-raw: |
           {{hub- end hub}}
         {{hub- end hub}}
             ports:
-              - port: {{hub index $rule "port" hub}}
-                protocol: {{hub index $rule "protocol" hub}}
+              - port: '{{hub index $rule "port" hub}}'
+                protocol: '{{hub index $rule "protocol" hub}}'
       {{hub- end hub}}
     {{hub- end hub}}
     {{- end }}
@@ -147,8 +147,8 @@ object-templates-raw: |
           {{hub- end hub}}
         {{hub- end hub}}
             ports:
-              - port: {{hub index $rule "port" hub}}
-                protocol: {{hub index $rule "protocol" hub}}
+              - port: '{{hub index $rule "port" hub}}'
+                protocol: '{{hub index $rule "protocol" hub}}'
       {{hub- end hub}}
     {{hub- end hub}}
     {{hub- if and (eq $ruleType "egress") $hasRules hub}}
@@ -167,8 +167,8 @@ object-templates-raw: |
           {{hub- end hub}}
         {{hub- end hub}}
             ports:
-              - port: {{hub index $rule "port" hub}}
-                protocol: {{hub index $rule "protocol" hub}}
+              - port: '{{hub index $rule "port" hub}}'
+                protocol: '{{hub index $rule "protocol" hub}}'
       {{hub- end hub}}
     {{hub- end hub}}
     {{- end }}
